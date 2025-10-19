@@ -297,6 +297,7 @@
             display: none;
             font-size: 1.5rem;
             cursor: pointer;
+            z-index: 1001;
         }
 
         /* Hero Section */
@@ -930,11 +931,46 @@
 
         @media (max-width: 768px) {
             .nav-links {
-                display: none;
+                position: fixed;
+                top: 80px;
+                left: 0;
+                width: 100%;
+                background: white;
+                flex-direction: column;
+                padding: 20px;
+                box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+                transform: translateY(-100%);
+                opacity: 0;
+                visibility: hidden;
+                transition: all 0.3s ease;
+                z-index: 999;
+            }
+
+            .nav-links.active {
+                transform: translateY(0);
+                opacity: 1;
+                visibility: visible;
+            }
+
+            .nav-link, .demo-link, .nav-linx {
+                padding: 15px 0;
+                border-bottom: 1px solid var(--gray-light);
+                width: 100%;
+                text-align: center;
+            }
+
+            .nav-link:last-child, .demo-link:last-child, .nav-linx:last-child {
+                border-bottom: none;
             }
 
             .mobile-menu {
                 display: block;
+                z-index: 1000;
+            }
+
+            /* Close icon when menu is open */
+            .mobile-menu.active i::before {
+                content: "\f00d"; /* FontAwesome close icon */
             }
 
             .hero-content h1 {
@@ -1405,7 +1441,34 @@
         // Mobile Menu Toggle
         document.querySelector('.mobile-menu').addEventListener('click', function() {
             const navLinks = document.querySelector('.nav-links');
-            navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
+            const mobileMenu = this;
+
+            navLinks.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
+
+            // Prevent body scroll when menu is open
+            document.body.style.overflow = navLinks.classList.contains('active') ? 'hidden' : '';
+        });
+
+        // Close menu when clicking on a link
+        document.querySelectorAll('.nav-link, .demo-link, .nav-linx').forEach(link => {
+            link.addEventListener('click', () => {
+                document.querySelector('.nav-links').classList.remove('active');
+                document.querySelector('.mobile-menu').classList.remove('active');
+                document.body.style.overflow = '';
+            });
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const navLinks = document.querySelector('.nav-links');
+            const mobileMenu = document.querySelector('.mobile-menu');
+
+            if (!navLinks.contains(event.target) && !mobileMenu.contains(event.target) && navLinks.classList.contains('active')) {
+                navLinks.classList.remove('active');
+                mobileMenu.classList.remove('active');
+                document.body.style.overflow = '';
+            }
         });
 
         // Back to Top Button
@@ -1605,6 +1668,31 @@
 
         // Initialize the USSD simulator
         attachMenuListeners();
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                // Get the target element, subtracting the height of the sticky header
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+
+                const targetElement = document.querySelector(targetId);
+                const headerHeight = document.querySelector('header').offsetHeight;
+
+                if (targetElement) {
+                    window.scrollTo({
+                        top: targetElement.offsetTop - headerHeight,
+                        behavior: 'smooth'
+                    });
+
+                    // Close mobile menu if open
+                    document.querySelector('.nav-links').classList.remove('active');
+                    document.querySelector('.mobile-menu').classList.remove('active');
+                    document.body.style.overflow = '';
+                }
+            });
+        });
     </script>
 </body>
 </html>
